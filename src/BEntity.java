@@ -32,7 +32,7 @@ public class BEntity {
 
     private boolean isInWindow(int seqNumb) {
         Queue<Integer> seqNumbInWindow = new LinkedList<>();
-        for (int i = 0; i < windowSize; i++) {
+        for (int i = 0; i < sackSize; i++) {
             int temp = next + i >= limitSeqNumb ? next + i - limitSeqNumb : next + i;
             seqNumbInWindow.offer(temp);
         }
