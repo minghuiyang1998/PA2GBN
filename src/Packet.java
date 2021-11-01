@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Packet
 {
     private int seqnum;
@@ -111,7 +113,7 @@ public class Packet
 
     public String toString()
     {
-        return("seqnum: " + seqnum + "  acknum: " + acknum + "  checksum: " +
+        return("seqnum: " + seqnum + "  acknum: " + acknum + "  sack: " + Arrays.toString(sack) + "  checksum: " +
                 checksum + "  payload: " + payload);
     }
 
