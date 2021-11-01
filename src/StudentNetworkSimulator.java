@@ -89,7 +89,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     private final int WindowSize;
     private final double RxmtInterval;
     private final int LimitSeqNo;
-    private final int sackSize;
+    private final int SackSize;
 
     // Add any necessary class variables here.  Remember, you cannot use
     // these variables to send messages error free!  They can only hold
@@ -108,9 +108,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
     {
         super(numMessages, loss, corrupt, avgDelay, trace, seed);
         WindowSize = winsize;
-        LimitSeqNo = winsize*2; // set appropriately; assumes SR here!
         RxmtInterval = delay;
-        sackSize = 5;
+        SackSize = Math.max(5, winsize);
+        LimitSeqNo = WindowSize + SackSize; // set appropriately; assumes SR here!
     }
 
 
@@ -163,7 +163,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // initialization (e.g. of member variables you add to control the state
     // of entity B).
      BEntity bInit() {
-        return new BEntity(WindowSize, LimitSeqNo, sackSize);
+        return new BEntity(WindowSize, LimitSeqNo, SackSize);
      }
 
     // Use to print final statistics
