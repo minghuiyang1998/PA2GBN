@@ -8,13 +8,26 @@ public class BEntity {
     private int next;
     private int countACK = 0;
     private int countTo5 = 0;
+    private final List<Integer> sackList;
+    private final int sackSize;
 
-    BEntity(int windowSize, int limitSeqNumb) {
+    BEntity(int windowSize, int limitSeqNumb, int sackSize) {
         this.windowSize = windowSize;
         this.limitSeqNumb = limitSeqNumb;
         this.checksum = new Checksum();
         this.outOfOrderBuffer = new HashMap<>();
         this.next = 0;
+        this.sackList = new ArrayList<>();
+        this.sackSize = sackSize;
+    }
+
+    private void addToSack(int seqNumb) {
+        if (sackList.size() >= sackSize) {
+            sackList.remove(0);
+            sackList.add(seqNumb);
+        } else {
+            sackList.add(seqNumb);
+        }
     }
 
     private boolean isInWindow(int seqNumb) {
@@ -40,7 +53,11 @@ public class BEntity {
         int ackNumb = next;
         String payload = "";
         int check = checksum.calculateChecksum(seqNumb, ackNumb, payload);
-        NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload));
+        int[] sack = new int[sackSize];
+        for (int i = 0; i < sack.length; i++) {
+            sack[i] = sackList.get(i);
+        }
+        NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload, sack));
         countACK += 1;
     }
 
@@ -48,6 +65,7 @@ public class BEntity {
         String payload = packet.getPayload();
         // send all this consecutive to layer5
         NetworkSimulator.toLayer5(payload);
+        addToSack(packet.getSeqnum());
         countTo5 += 1;
         next = next >= limitSeqNumb - 1 ? 0 : next + 1;
     }
@@ -89,6 +107,7 @@ public class BEntity {
                 //3. If the data packet is out of order, buffer the data packet and send an ACK
 //                System.out.println("B out of order");
                 if (!outOfOrderBuffer.containsKey(seqNumb)) {
+                    addToSack(seqNumb);
                     outOfOrderBuffer.put(seqNumb, packet);
                 }
                 sendCumulativeACK();
