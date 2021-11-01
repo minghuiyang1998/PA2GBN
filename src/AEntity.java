@@ -60,7 +60,7 @@ public class AEntity {
         int[] sack = {-1, -1, -1, -1, -1};
         if(isNotWaiting()) {
             Packet packet = new Packet(tempSeqNum, -1,
-                    checksum.calculateChecksum(tempSeqNum, -1, message.getData()), message.getData(), sack);
+                    checksum.calculateChecksum(tempSeqNum, -1, message.getData(), sack), message.getData(), sack);
             buffer.put(tempSeqNum, packet);
 //            System.out.println("Sequence " + tempSeqNum + " first send time: " + NetworkSimulator.getTime());
             sendTime.put(tempSeqNum, NetworkSimulator.getTime());
@@ -150,7 +150,7 @@ public class AEntity {
                    packetLastSend %= limitSeqNum;
                    Message message = bufferForSend.remove(0);
                    Packet sendPacket = new Packet(tempSeqNum, -1,
-                           checksum.calculateChecksum(tempSeqNum, -1, message.getData()), message.getData(), sack);
+                           checksum.calculateChecksum(tempSeqNum, -1, message.getData(), sack), message.getData(), sack);
                    buffer.put(tempSeqNum, sendPacket);
                    tempSeqNum = (tempSeqNum+1) % limitSeqNum;
 

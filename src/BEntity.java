@@ -52,11 +52,12 @@ public class BEntity {
         int seqNumb = 0;
         int ackNumb = next;
         String payload = "";
-        int check = checksum.calculateChecksum(seqNumb, ackNumb, payload);
+
         int[] sack = new int[sackSize];
         for (int i = 0; i < sack.length; i++) {
             sack[i] = sackList.get(i);
         }
+        int check = checksum.calculateChecksum(seqNumb, ackNumb, payload, sack);
         NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload, sack));
         countACK += 1;
     }
