@@ -32,7 +32,7 @@ public class BEntity {
 
     private boolean isInWindow(int seqNumb) {
         Queue<Integer> seqNumbInWindow = new LinkedList<>();
-        for (int i = 0; i < sackSize; i++) {
+        for (int i = 0; i < windowSize; i++) {
             int temp = next + i >= limitSeqNumb ? next + i - limitSeqNumb : next + i;
             seqNumbInWindow.offer(temp);
         }
@@ -109,11 +109,12 @@ public class BEntity {
             // in window, out of order
             if (isInWindow(seqNumb)) {
                 //3. If the data packet is out of order, buffer the data packet and send an ACK
-                System.out.println("B recieved out of order");
                 if (!outOfOrderBuffer.containsKey(seqNumb)) {
+                    System.out.println("B recieved out of order, not duplicate");
                     addToSack(seqNumb);
                     outOfOrderBuffer.put(seqNumb, packet);
                 }
+                System.out.println("B recieved out of order, duplicate");
                 sendCumulativeACK();
             } else {
                 // out of window, duplicate
