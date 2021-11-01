@@ -4,6 +4,7 @@ public class Packet
     private int acknum;
     private int checksum;
     private String payload;
+    private int[] sack;
 
     public Packet(Packet p)
     {
@@ -11,13 +12,15 @@ public class Packet
         acknum = p.getAcknum();
         checksum = p.getChecksum();
         payload = new String(p.getPayload());
+        sack = p.getSack();
     }
 
-    public Packet(int seq, int ack, int check, String newPayload)
+    public Packet(int seq, int ack, int check, String newPayload, int[] sackArray)
     {
         seqnum = seq;
         acknum = ack;
         checksum = check;
+        sack = sackArray;
         if (newPayload == null)
         {
             payload = "";
@@ -40,6 +43,9 @@ public class Packet
         payload = "";
     }
 
+    public void setSack(int[] sack) {
+        this.sack = sack;
+    }
 
     public boolean setSeqnum(int n)
     {
@@ -91,6 +97,10 @@ public class Packet
     public int getChecksum()
     {
         return checksum;
+    }
+
+    public int[] getSack() {
+        return sack;
     }
 
     public String getPayload()
