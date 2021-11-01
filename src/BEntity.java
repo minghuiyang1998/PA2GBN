@@ -72,9 +72,9 @@ public class BEntity {
 
     // called by simulator
     public void input(Packet packet) {
-//        System.out.println(" B received packet-------------------------------------------------------------------");
-//        System.out.println(packet.toString());
-//        System.out.println("--------------------------------------------------------------------------------");
+        System.out.println(" B received packet-------------------------------------------------------------------");
+        System.out.println(packet.toString());
+        System.out.println("--------------------------------------------------------------------------------");
         // 1. Check if the packet is corrupted and drop it
         int seqNumb = packet.getSeqnum();
         int checkSum = checksum.calculateChecksum(packet);
@@ -105,7 +105,7 @@ public class BEntity {
             // in window, out of order
             if (isInWindow(seqNumb)) {
                 //3. If the data packet is out of order, buffer the data packet and send an ACK
-//                System.out.println("B out of order");
+                System.out.println("B recieved out of order");
                 if (!outOfOrderBuffer.containsKey(seqNumb)) {
                     addToSack(seqNumb);
                     outOfOrderBuffer.put(seqNumb, packet);
@@ -113,7 +113,7 @@ public class BEntity {
                 sendCumulativeACK();
             } else {
                 // out of window, duplicate
-//                System.out.println("B duplicate");
+                System.out.println("B received duplicate");
                 sendCumulativeACK();
             }
         }
