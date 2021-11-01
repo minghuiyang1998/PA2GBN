@@ -54,7 +54,7 @@ public class BEntity {
         String payload = "";
         int check = checksum.calculateChecksum(seqNumb, ackNumb, payload);
         int[] sack = new int[sackSize];
-        for (int i = 0; i < sack.length; i++) {
+        for (int i = 0; i < sackList.size(); i++) {
             sack[i] = sackList.get(i);
         }
         NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload, sack));
@@ -65,7 +65,10 @@ public class BEntity {
         String payload = packet.getPayload();
         // send all this consecutive to layer5
         NetworkSimulator.toLayer5(payload);
-        addToSack(packet.getSeqnum());
+        int seqNumb = packet.getSeqnum();
+        if (!sackList.contains(seqNumb)) {
+            addToSack(seqNumb);
+        }
         countTo5 += 1;
         next = next >= limitSeqNumb - 1 ? 0 : next + 1;
     }
