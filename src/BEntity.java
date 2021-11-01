@@ -110,8 +110,8 @@ public class BEntity {
             int sz = sackQueue.size();
             for (int i = 0; i < sz; i++) {
                 Packet p = sackQueue.poll();
-                Integer seq = p.getSeqnum();
-                if (seq.equals(next)) {
+                int seq = p.getSeqnum();
+                if (seq == next) {
                     dealWithInOrder(p);
                 } else {
                     sackQueue.offer(p);
