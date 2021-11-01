@@ -4,7 +4,7 @@ public class BEntity {
     private final int windowSize;
     private final int limitSeqNumb;
     private final Checksum checksum;
-    private final Queue<Packet> sackList;
+    private final Queue<Packet> sackQueue;
     private int next;
     private int countACK = 0;
     private int countTo5 = 0;
@@ -15,25 +15,25 @@ public class BEntity {
         this.limitSeqNumb = limitSeqNumb;
         this.checksum = new Checksum();
         this.next = 0;
-        this.sackList = new LinkedList<>();
+        this.sackQueue = new LinkedList<>();
         this.sackSize = sackSize;
     }
 
     private void addToSack(Packet packet) {
-        if (sackList.size() >= sackSize) {
-            sackList.poll();
-            sackList.offer(packet);
+        if (sackQueue.size() >= sackSize) {
+            sackQueue.poll();
+            sackQueue.offer(packet);
         } else {
-            sackList.offer(packet);
+            sackQueue.offer(packet);
         }
     }
 
     private boolean isInSack(int seqNumb) {
         boolean result = false;
-        int sz = sackList.size();
+        int sz = sackQueue.size();
         for (int i = 0; i < sz; i++) {
-            Packet pkt = sackList.poll();
-            sackList.offer(pkt);
+            Packet pkt = sackQueue.poll();
+            sackQueue.offer(pkt);
             if (pkt.getSeqnum() == seqNumb) {
                 result = true;
                 break;
@@ -66,10 +66,10 @@ public class BEntity {
         String payload = "";
 
         int[] sack = new int[sackSize];
-        for (int i = 0; i < sackList.size(); i++) {
-            Packet p = sackList.poll();
+        for (int i = 0; i < sackQueue.size(); i++) {
+            Packet p = sackQueue.poll();
             sack[i] = p.getSeqnum();
-            sackList.offer(p);
+            sackQueue.offer(p);
         }
         int check = checksum.calculateChecksum(seqNumb, ackNumb, payload, sack);
         NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload, sack));
@@ -81,7 +81,7 @@ public class BEntity {
         // send all this consecutive to layer5
         NetworkSimulator.toLayer5(payload);
         int seqNumb = packet.getSeqnum();
-        if (!sackList.contains(seqNumb)) {
+        if (!sackQueue.contains(seqNumb)) {
             addToSack(packet);
         }
         countTo5 += 1;
@@ -107,14 +107,14 @@ public class BEntity {
         if (seqNumb == next) {
             dealWithInOrder(packet);
             // check out of buffer, if there are consecutive, addToInOrder()
-            int sz = sackList.size();
+            int sz = sackQueue.size();
             for (int i = 0; i < sz; i++) {
-                Packet p = sackList.poll();
+                Packet p = sackQueue.poll();
                 Integer seq = p.getSeqnum();
                 if (seq.equals(next)) {
                     dealWithInOrder(p);
                 } else {
-                    sackList.offer(p);
+                    sackQueue.offer(p);
                 }
             }
             sendCumulativeACK();
