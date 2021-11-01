@@ -4,30 +4,42 @@ public class BEntity {
     private final int windowSize;
     private final int limitSeqNumb;
     private final Checksum checksum;
-    private final HashMap<Integer, Packet> outOfOrderBuffer;
+    private final Queue<Packet> sackList;
     private int next;
     private int countACK = 0;
     private int countTo5 = 0;
-    private final List<Integer> sackList;
     private final int sackSize;
 
     BEntity(int windowSize, int limitSeqNumb, int sackSize) {
         this.windowSize = windowSize;
         this.limitSeqNumb = limitSeqNumb;
         this.checksum = new Checksum();
-        this.outOfOrderBuffer = new HashMap<>();
         this.next = 0;
-        this.sackList = new ArrayList<>();
+        this.sackList = new LinkedList<>();
         this.sackSize = sackSize;
     }
 
-    private void addToSack(int seqNumb) {
+    private void addToSack(Packet packet) {
         if (sackList.size() >= sackSize) {
-            sackList.remove(0);
-            sackList.add(seqNumb);
+            sackList.poll();
+            sackList.offer(packet);
         } else {
-            sackList.add(seqNumb);
+            sackList.offer(packet);
         }
+    }
+
+    private boolean isInSack(int seqNumb) {
+        boolean result = false;
+        int sz = sackList.size();
+        for (int i = 0; i < sz; i++) {
+            Packet pkt = sackList.poll();
+            sackList.offer(pkt);
+            if (pkt.getSeqnum() == seqNumb) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
 
     private boolean isInWindow(int seqNumb) {
@@ -55,7 +67,9 @@ public class BEntity {
 
         int[] sack = new int[sackSize];
         for (int i = 0; i < sackList.size(); i++) {
-            sack[i] = sackList.get(i);
+            Packet p = sackList.poll();
+            sack[i] = p.getSeqnum();
+            sackList.offer(p);
         }
         int check = checksum.calculateChecksum(seqNumb, ackNumb, payload, sack);
         NetworkSimulator.toLayer3(ID, new Packet(seqNumb, ackNumb, check, payload, sack));
@@ -68,7 +82,7 @@ public class BEntity {
         NetworkSimulator.toLayer5(payload);
         int seqNumb = packet.getSeqnum();
         if (!sackList.contains(seqNumb)) {
-            addToSack(seqNumb);
+            addToSack(packet);
         }
         countTo5 += 1;
         next = next >= limitSeqNumb - 1 ? 0 : next + 1;
@@ -93,26 +107,24 @@ public class BEntity {
         if (seqNumb == next) {
             dealWithInOrder(packet);
             // check out of buffer, if there are consecutive, addToInOrder()
-            Set<Integer> removed = new HashSet<>();
-            for (Integer seq : outOfOrderBuffer.keySet()) {
+            int sz = sackList.size();
+            for (int i = 0; i < sz; i++) {
+                Packet p = sackList.poll();
+                Integer seq = p.getSeqnum();
                 if (seq.equals(next)) {
-                    Packet p = outOfOrderBuffer.get(seq);
-                    removed.add(seq);
                     dealWithInOrder(p);
+                } else {
+                    sackList.offer(p);
                 }
-            }
-            for (Integer r : removed) {
-                outOfOrderBuffer.remove(r);
             }
             sendCumulativeACK();
         } else {
             // in window, out of order
             if (isInWindow(seqNumb)) {
                 //3. If the data packet is out of order, buffer the data packet and send an ACK
-                if (!outOfOrderBuffer.containsKey(seqNumb)) {
+                if (!isInSack(seqNumb)) {
                     System.out.println("B recieved out of order, not duplicate");
-                    addToSack(seqNumb);
-                    outOfOrderBuffer.put(seqNumb, packet);
+                    addToSack(packet);
                 }
                 System.out.println("B recieved out of order, duplicate");
                 sendCumulativeACK();

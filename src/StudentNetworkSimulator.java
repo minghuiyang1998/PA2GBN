@@ -110,7 +110,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
         WindowSize = winsize;
         RxmtInterval = delay;
         SackSize = 5;
-        LimitSeqNo = WindowSize + SackSize + 1;
+        LimitSeqNo = WindowSize + SackSize + 1; // if 5 item in sack is out of order
     }
 
 
