@@ -125,8 +125,9 @@ public class BEntity {
                 if (!isInSack(seqNumb)) {
                     System.out.println("B recieved out of order, not duplicate");
                     addToSack(packet);
+                } else {
+                    System.out.println("B recieved out of order, duplicate");
                 }
-                System.out.println("B recieved out of order, duplicate");
                 sendCumulativeACK();
             } else {
                 // out of window, duplicate

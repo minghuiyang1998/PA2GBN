@@ -70,7 +70,7 @@ public class AEntity {
             NetworkSimulator.startTimer(0, rxmInterval);
             tempSeqNum = (tempSeqNum+1) % limitSeqNum;
         } else {
-//            System.out.println("buffer the Message: " + message.getData());
+            System.out.println("buffer the Message: " + message.getData());
             bufferForSend.add(message);
         }
     }
@@ -99,21 +99,23 @@ public class AEntity {
             if(ackedNum == windowStartNum) {
                 // this means it is a duplicate ack, retransmit all the unAcked packets
                 System.out.println("A received duplicate ACK, retransmit---------------------------------------------------");
-
-                for(int i = windowStartNum; i <= sack[sack.length-1]; i++) {
-                    if(!sackContains(sack, i)) {
+                int t = sack[sack.length-1];
+                if(t < windowStartNum) t += limitSeqNum;
+                for(int i = windowStartNum; i <= t; i++) {
+                    int m = i >= limitSeqNum? i-limitSeqNum:i;
+                    if(!sackContains(sack, m)) {
                         // need to retransmit packet i
                         numOfRetransmit++;
-                        Packet retransmitPacket = buffer.get(i);
+                        Packet retransmitPacket = buffer.get(m);
                         if(retransmitPacket != null) {
-                            System.out.println("retransmitPacket: " + retransmitPacket.toString());
+                            System.out.println("retransmitPacket: " + retransmitPacket);
                             retransmitPackets.add(retransmitPacket.getSeqnum());
                             sendTime.put(retransmitPacket.getSeqnum(), NetworkSimulator.getTime());
                             NetworkSimulator.toLayer3(0, retransmitPacket);
                             NetworkSimulator.startTimer(0, rxmInterval);
                         }
                     } else {
-                        buffer.remove(i);
+                        buffer.remove(m);
                     }
                 }
             } else {
@@ -149,6 +151,7 @@ public class AEntity {
                for( ; !bufferForSend.isEmpty() && isNotWaiting(); packetLastSend++) {
                    packetLastSend %= limitSeqNum;
                    Message message = bufferForSend.remove(0);
+                   sack = new int[]{-1, -1, -1, -1, -1};
                    Packet sendPacket = new Packet(tempSeqNum, -1,
                            checksum.calculateChecksum(tempSeqNum, -1, message.getData(), sack), message.getData(), sack);
                    buffer.put(tempSeqNum, sendPacket);
