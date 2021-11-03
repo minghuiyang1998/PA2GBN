@@ -100,7 +100,8 @@ public class AEntity {
                 // this means it is a duplicate ack, retransmit all the unAcked packets
                 System.out.println("A received duplicate ACK, retransmit---------------------------------------------------");
                 int t = sack[sack.length-1];
-                if(t < windowStartNum) t += limitSeqNum;
+//                System.out.println("t: " + t + "  window start: " + windowStartNum);
+                if(t < windowStartNum && windowStartNum - t > 5) t += limitSeqNum;
                 for(int i = windowStartNum; i <= t; i++) {
                     int m = i >= limitSeqNum? i-limitSeqNum:i;
                     if(!sackContains(sack, m)) {
