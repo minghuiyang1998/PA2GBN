@@ -90,6 +90,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
     private final double RxmtInterval;
     private final int LimitSeqNo;
     private final int SackSize;
+    private double inputLossProb;
+    private double inputCorruptProb;
+
 
     // Add any necessary class variables here.  Remember, you cannot use
     // these variables to send messages error free!  They can only hold
@@ -111,6 +114,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
         RxmtInterval = delay;
         SackSize = 5;
         LimitSeqNo = WindowSize + SackSize + 1; // if 5 item in sack is out of order
+        inputLossProb = loss;
+        inputCorruptProb = corrupt;
+
     }
 
 
@@ -188,6 +194,37 @@ public class StudentNetworkSimulator extends NetworkSimulator
         System.out.println("\nEXTRA:");
         // EXAMPLE GIVEN BELOW
         //System.out.println("Example statistic you want to check e.g. number of ACK packets received by A :" + "<YourVariableHere>");
+
+        int numbTransmitByA = a.getNumOfOriginal();
+        int numbRetransmitByA = a.getNumOfRetransmit();
+        int countBTo5 = b.getCountTo5();
+        int countBAck = b.getCountACK();
+        int corruptPkts = getnCorrupt();
+        double ratioLost = (double)(a.getNumOfRetransmit()- getnCorrupt()) / (double)((a.getNumOfOriginal()+ a.getNumOfRetransmit())+b.getCountACK());
+        double ratioCorrupt = (double)getnCorrupt() / (double)((a.getNumOfOriginal() + a.getNumOfRetransmit()) + b.getCountACK()-(a.getNumOfRetransmit()-getnCorrupt()));
+        double averRTT = a.getTotalRTT()/a.getCount1();
+        double averCommuTime = a.getTotalComTime()/a.getCount2();
+        double totalSimulate = endSimulate - startSimulate;
+        try{
+            if (inputLossProb > 0.0) {
+                dataFile.write( inputLossProb + " ");
+            }
+            if (inputCorruptProb > 0.0) {
+                dataFile.write( inputCorruptProb + " ");
+            }
+            dataFile.write(numbTransmitByA + " ");
+            dataFile.write( numbRetransmitByA + " ");
+            dataFile.write(countBTo5 + " ");
+            dataFile.write(countBAck + " ");
+            dataFile.write( corruptPkts + " ");
+            dataFile.write(ratioLost + " ");
+            dataFile.write(ratioCorrupt + " ");
+            dataFile.write(averRTT + " ");
+            dataFile.write(averCommuTime + " ");
+            dataFile.write(totalSimulate + " ");
+            dataFile.write('\n');
+        } catch (Exception e) {e.printStackTrace();}
+
     }
 
 }
