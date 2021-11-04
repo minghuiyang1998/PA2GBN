@@ -88,6 +88,24 @@ public class BEntity {
         next = next >= limitSeqNumb - 1 ? 0 : next + 1;
     }
 
+    private boolean dealwithSack(Packet packet) {
+        boolean isNextUpdate = false;
+        // check out of buffer, if there are consecutive, addToInOrder()
+        int sz = sackQueue.size();
+        for (int i = 0; i < sz; i++) {
+            Packet p = sackQueue.poll();
+            int seq = p.getSeqnum();
+            if (seq == next) {
+                System.out.println("seq: " + seq);
+                isNextUpdate = true;
+                dealWithInOrder(p);
+            } else {
+                sackQueue.offer(p);
+            }
+        }
+        return isNextUpdate;
+    }
+
     // called by simulator
     public void input(Packet packet) {
         System.out.println(" B received packet-------------------------------------------------------------------");
@@ -106,16 +124,9 @@ public class BEntity {
         //delivered to layer5
         if (seqNumb == next) {
             dealWithInOrder(packet);
-            // check out of buffer, if there are consecutive, addToInOrder()
-            int sz = sackQueue.size();
-            for (int i = 0; i < sz; i++) {
-                Packet p = sackQueue.poll();
-                int seq = p.getSeqnum();
-                if (seq == next) {
-                    dealWithInOrder(p);
-                } else {
-                    sackQueue.offer(p);
-                }
+            boolean isNextUpdate = true;
+            while (isNextUpdate) {
+                isNextUpdate = dealwithSack(packet);
             }
             sendCumulativeACK();
         } else {

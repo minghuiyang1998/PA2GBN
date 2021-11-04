@@ -182,7 +182,7 @@ public class Project {
 //        }
 
         StudentNetworkSimulator simulator;
-        int nsim = 1000;
+        int nsim = 3000;
         double loss = 0.1;
         double corrupt = 0.1;
         double delay = 200;
