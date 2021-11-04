@@ -83,9 +83,8 @@ public class AEntity {
      * @param packet: The packet that got from the layer3 medium
      */
     public void input(Packet packet) {
-        System.out.println(" A received packet---------------------------------------------------------------------");
+        System.out.println(" A received packet");
         System.out.println(packet.toString());
-        System.out.println("---------------------------------------------------------------------------------");
 
         int checkSum = checksum.calculateChecksum(packet);
         if(checkSum == packet.getChecksum()) {
@@ -98,7 +97,7 @@ public class AEntity {
             int[] sack = packet.getSack();
             if(ackedNum == windowStartNum) {
                 // this means it is a duplicate ack, retransmit all the unAcked packets
-                System.out.println("A received duplicate ACK, retransmit---------------------------------------------------");
+                System.out.println("A received duplicate ACK, retransmit");
                 int t = sack[sack.length-1];
 //                System.out.println("t: " + t + "  window start: " + windowStartNum);
                 if(t < windowStartNum && windowStartNum - t > 5) t += limitSeqNum;
@@ -182,7 +181,7 @@ public class AEntity {
      * for how the timer is started and stopped.
      */
     public void timerInterrupt() {
-        System.out.println("A timeout, retransmit---------------------------------------------------------");
+        System.out.println("A timeout, retransmit");
         numOfRetransmit++;
         Packet timoutPacket = buffer.get(windowStartNum);
         if(timoutPacket != null) {
