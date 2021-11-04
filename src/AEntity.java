@@ -90,10 +90,18 @@ public class AEntity {
         if(checkSum == packet.getChecksum()) {
             NetworkSimulator.stopTimer(0);   // receive a packet, stop timer
             int ackedNum = packet.getAcknum();
-            // if the packet is acknowledged, then remove it from the buffer
-            if(ackedNum == 0) buffer.remove(limitSeqNum-1);
-            else
-                buffer.remove(ackedNum-1);
+//            // if the packet is acknowledged, then remove it from the buffer
+            if(windowStartNum < ackedNum) {
+                for(int i = windowStartNum; i < ackedNum; i++) {
+                    buffer.remove(i);
+                }
+            } else if(windowStartNum > ackedNum) {
+                for(int i = windowStartNum; i < ackedNum + limitSeqNum; i++) {
+                    if(i >= limitSeqNum)
+                        buffer.remove(i-limitSeqNum);
+                    buffer.remove(i);
+                }
+            }
             int[] sack = packet.getSack();
             if(ackedNum == windowStartNum) {
                 // this means it is a duplicate ack, retransmit all the unAcked packets
@@ -104,18 +112,17 @@ public class AEntity {
                 for(int i = windowStartNum; i <= t; i++) {
                     int m = i >= limitSeqNum? i-limitSeqNum:i;
                     if(!sackContains(sack, m)) {
-                        // need to retransmit packet i
-                        numOfRetransmit++;
+                        // need to retransmit packet
                         Packet retransmitPacket = buffer.get(m);
+                        // avoid that A receiving duplicate ACK but has nothing to retransmit
                         if(retransmitPacket != null) {
+                            numOfRetransmit++;
                             System.out.println("retransmitPacket: " + retransmitPacket);
                             retransmitPackets.add(retransmitPacket.getSeqnum());
                             sendTime.put(retransmitPacket.getSeqnum(), NetworkSimulator.getTime());
                             NetworkSimulator.toLayer3(0, retransmitPacket);
                             NetworkSimulator.startTimer(0, rxmInterval);
                         }
-                    } else {
-                        buffer.remove(m);
                     }
                 }
             } else {
@@ -184,12 +191,11 @@ public class AEntity {
         System.out.println("A timeout, retransmit");
         numOfRetransmit++;
         Packet timoutPacket = buffer.get(windowStartNum);
-        if(timoutPacket != null) {
-            retransmitPackets.add(timoutPacket.getSeqnum());
-            NetworkSimulator.toLayer3(0, timoutPacket);
-            NetworkSimulator.stopTimer(0);
-            NetworkSimulator.startTimer(0, rxmInterval);
-        }
+
+        retransmitPackets.add(timoutPacket.getSeqnum());
+        NetworkSimulator.toLayer3(0, timoutPacket);
+        NetworkSimulator.stopTimer(0);
+        NetworkSimulator.startTimer(0, rxmInterval);
     }
 
     /**
