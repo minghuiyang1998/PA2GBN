@@ -185,10 +185,12 @@ public class AEntity {
         System.out.println("A timeout, retransmit---------------------------------------------------------");
         numOfRetransmit++;
         Packet timoutPacket = buffer.get(windowStartNum);
-        retransmitPackets.add(timoutPacket.getSeqnum());
-        NetworkSimulator.toLayer3(0, timoutPacket);
-        NetworkSimulator.stopTimer(0);
-        NetworkSimulator.startTimer(0, rxmInterval);
+        if(timoutPacket != null) {
+            retransmitPackets.add(timoutPacket.getSeqnum());
+            NetworkSimulator.toLayer3(0, timoutPacket);
+            NetworkSimulator.stopTimer(0);
+            NetworkSimulator.startTimer(0, rxmInterval);
+        }
     }
 
     /**
